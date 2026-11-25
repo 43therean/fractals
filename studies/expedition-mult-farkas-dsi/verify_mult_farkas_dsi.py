@@ -20,15 +20,17 @@ Certifies:
      - Proves {(1,0), (0,1), (2,1), (1,2)} are necessary and sufficient extreme rays of the
        dual Farkas cone on dyadic 4-point boxes (checked against an independent exact LP/Fourier-Motzkin
        elimination solver on 500 seeded random rational boxes: 0 disagreements!).
-     - Live 5-seed percolation check (critical/model.js): at +-2*SE, BOTH local 3-point rays
-       (1,0) and (0,1) PASS for falling D_eff (log-concavity), yet the two non-local 4-point
-       Farkas rays (2,1) and (1,2) REFUTE falling D_eff in pure BigInt arithmetic!
+     - Live 5-seed percolation check (critical/model.js, fixed batch [401, 5010, 5020, 5030, 5040]):
+       at +-2*SE on this batch, BOTH local 3-point rays (1,0) and (0,1) PASS for falling D_eff
+       (log-concavity), yet the two non-local 4-point Farkas rays (2,1) and (1,2) REFUTE falling D_eff
+       in pure BigInt arithmetic! (Across unseen 5-seed batches, rising D_eff convex feasibility holds
+       6/6, whereas +-2*SE falling D_eff refutation is sample-dependent: 4/6 batches refuted.)
   3. Portal 2 Zero-Log DSI Null-Equivalence Operator Pi_p(k) = prod_{j=0}^{p-1} R_{k+j}:
      - Exact positive control: Pi_p(k) == 1 identically on synthetic period-p DSI rational series (p=2,3).
-     - Live Sabra shell-model empirical discovery (seed=1 & seed=7): refutes period-3 oscillation
-       in plain <|u_n|^2> (shuffled-null p = 0.405 / 1.000, matching L'vov et al. 1998's elimination
-       of GOY's period-3 artifact) while exposing the decaying period-2 helicity ripple (-1/2)^n
-       and 20x flattening in flux moments F_2(n).
+     - Live Sabra shell-model empirical discovery (seed=1 & seed=7): refutes period-3 dominance
+       in plain <|u_n|^2> via exact Fraction comparison max_dev(p=2) < max_dev(p=3) (matching
+       L'vov et al. 1998's elimination of GOY's period-3 artifact) while exposing the decaying
+       period-2 helicity ripple (-1/2)^n and >20x flattening in flux moments F_2(n).
   4. Must-Fail Controls (R1-R5): rejects invalid/negative/bool inputs, flipped inequality,
      truncated 2-ray (local-only) Farkas checker missing 4-point obstruction, and corrupted witness.
 """
@@ -38,7 +40,6 @@ import json
 import math
 import random
 import subprocess
-import sys
 import time
 from typing import Dict, List, Sequence, Tuple
 
@@ -380,23 +381,25 @@ def run_live_fractals_checks() -> Dict:
         shells_dsi = list(range(2, 10))
         S2 = [float_to_exact_dec(run["S"][1][n][0]) for n in shells_dsi]
         F2 = [float_to_exact_dec(run["F"][1][n][0]) for n in shells_dsi]
-        d_s2_p1 = float(dsi_max_dev(null_equiv_products(S2, 1)))
-        d_s2_p2 = float(dsi_max_dev(null_equiv_products(S2, 2)))
-        d_s2_p3 = float(dsi_max_dev(null_equiv_products(S2, 3)))
-        d_f2_p1 = float(dsi_max_dev(null_equiv_products(F2, 1)))
-        # Flux flattens shell-to-shell ripple by >20x!
-        require(d_s2_p1 / d_f2_p1 > 20.0, f"{sname}: flux flattening ratio < 20")
-        # Period-2 beats Period-3 on Sabra plain S2 (refuting GOY period-3 prior!)
-        require(d_s2_p2 < d_s2_p3, f"{sname}: expected p=2 < p=3 on Sabra")
+        q_s2_p1 = dsi_max_dev(null_equiv_products(S2, 1))
+        q_s2_p2 = dsi_max_dev(null_equiv_products(S2, 2))
+        q_s2_p3 = dsi_max_dev(null_equiv_products(S2, 3))
+        q_f2_p1 = dsi_max_dev(null_equiv_products(F2, 1))
+        # Flux flattens shell-to-shell ripple by >20x (exact Fraction comparison)!
+        require(q_s2_p1 > 20 * q_f2_p1, f"{sname}: flux flattening ratio <= 20")
+        # Period-2 beats Period-3 on Sabra plain S2 (exact Fraction comparison, refuting GOY period-3 prior!)
+        require(q_s2_p2 < q_s2_p3, f"{sname}: expected p=2 < p=3 on Sabra")
         sabra_out[sname] = {
             "F2_k41_5SE_sheaf_obstruction": r_f2,
             "F6_k41_5SE_sheaf_obstruction": r_f6,
-            "plain_S2_max_dev_p1_p2_p3": [round(d_s2_p1, 6), round(d_s2_p2, 6), round(d_s2_p3, 6)],
-            "flux_F2_max_dev_p1": round(d_f2_p1, 6),
-            "flux_flattening_factor": round(d_s2_p1 / d_f2_p1, 2),
+            "plain_S2_max_dev_p1_p2_p3": [round(float(q_s2_p1), 6), round(float(q_s2_p2), 6), round(float(q_s2_p3), 6)],
+            "flux_F2_max_dev_p1": round(float(q_f2_p1), 6),
+            "flux_flattening_factor": round(float(q_s2_p1 / q_f2_p1), 2),
         }
 
-    # Live 5-seed percolation exact 4-ray Farkas check at +-2*SE
+    # Live 5-seed percolation exact 4-ray Farkas check at +-2*SE (fixed batch [401, 5010, 5020, 5030, 5040];
+    # note: rising_D convex is 6/6 across 5 unseen batches, whereas +-2*SE falling_D concave refutation
+    # holds on 4/6 batches with batch-dependent failed-ray sets and is un-refuted on 2/5 unseen batches)
     node_perc = f"""
     const C = require({crit_path});
     const seeds = [401, 5010, 5020, 5030, 5040];
@@ -416,7 +419,7 @@ def run_live_fractals_checks() -> Dict:
     p_conc = check_4pt_farkas_monotonicity(ylo2, yhi2, mode="concave")
     require(p_conv["feasible"] is True, "percolation +-2SE rising D should be feasible")
     require((not p_conc["feasible"]) and set(p_conc["failed_rays"]) == {"u=(2,1)", "u=(1,2)"},
-            f"percolation +-2SE expected nonlocal 4-point rays only, got {p_conc}")
+            f"percolation +-2SE on fixed batch [401,5010,5020,5030,5040] expected nonlocal 4-point rays only, got {p_conc}")
 
     return {
         "sabra_live": sabra_out,

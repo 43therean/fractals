@@ -38,8 +38,8 @@ For four dyadic scales $x_k = x_0 r^k$ ($k = 0, 1, 2, 3$) with uncertainty inter
 
 (Log-concavity reverses signs: swap $y^+ \leftrightarrow y^-$ and reverse $\ge$ to $\le$.)
 - Verified 500/500 exact agreements against an independent Fourier–Motzkin elimination oracle over $\mathbb{Q}$.
-- **Live Discovery on 5-Seed Percolation (`critical/model.js`, seeds `[401, 5010, 5020, 5030, 5040]`, $L = 32, 64, 128, 256$):**
-  At $\pm 2\text{ SE}$, **neither local 3-point check** $(1, 0)$ nor $(0, 1)$ refutes log-concavity (falling $D_{\text{eff}}$), **yet BOTH non-local 4-point Farkas rays $(2, 1)$ and $(1, 2)$ refute log-concavity in pure BigInt arithmetic** — while log-convexity (rising $D_{\text{eff}}(L) \uparrow 91/48$) remains feasible!
+- **Live Discovery on Shipped 5-Seed Percolation Batch (`critical/model.js`, seeds `[401, 5010, 5020, 5030, 5040]`, $L = 32, 64, 128, 256$):**
+  On this fixed 5-seed batch at $\pm 2\text{ SE}$, **neither local 3-point check** $(1, 0)$ nor $(0, 1)$ refutes log-concavity (falling $D_{\text{eff}}$), **yet BOTH non-local 4-point Farkas rays $(2, 1)$ and $(1, 2)$ refute log-concavity in pure BigInt arithmetic** — while log-convexity (rising $D_{\text{eff}}(L) \uparrow 91/48$) remains feasible. *(Out-of-sample batch note: across 5 additional unseen 5-seed batches, log-convex rising-$D_{\text{eff}}$ feasibility holds `6/6` incl. this batch, whereas at 5-seed sample size $\pm 2\text{ SE}$ log-concavity is refuted in `3/5` unseen batches — `4/6` total, with failed-ray sets `{(2,1),(1,2)}`, `{(2,1)}`, or `{(1,0),(2,1)}` — and remains un-refuted on `2/5` unseen batches `[13, 42, 7, 100, 2024]` and `[999, 1001, 1002, 1003, 1004]`.)*
 
 ---
 
@@ -51,5 +51,5 @@ equals $1$ identically for any pure period-$p$ DSI oscillation $y_k = A \lambda^
 
 - **Positive controls:** $\max|\Pi_p - 1| = 0$ identically on exact period-2 and period-3 rational DSI sequences.
 - **Empirical correction to the period-3 prior on Sabra (`turbulence/model.js`, shells $n = 2..9$, `seed=1` and `seed=7`):**
-  - Contrary to the GOY shell-model period-3 expectation (`SEAM-05`), Sabra plain moments $\langle|u_n|^2\rangle$ **reject period-3** against 200 seeded ratio-shuffle nulls (`p = 0.405` on seed 1, **`p = 1.000`** on seed 7; `max_dev(p=3) = 0.485 / 0.659 > max_dev(p=2) = 0.377 / 0.334`)!
+  - Contrary to the GOY shell-model period-3 expectation (`SEAM-05`), Sabra plain moments $\langle|u_n|^2\rangle$ obey the exact rational ordering **`max_dev(p=3) = 0.484754 / 0.563938 > max_dev(p=2) = 0.376759 / 0.334498`** on `seed=1` / `seed=7` (`verify_mult_farkas_dsi.py` certifies `max_dev(p=2) < max_dev(p=3)` directly in `Fraction` arithmetic; exploratory ratio-shuffle null $p$-values such as `0.405` / `1.000` are external exploratory checks not computed by the shipped deterministic verifier).
   - Instead, $\Pi_p$ exposes the **decaying period-2 helicity ripple** injected by shell-0 forcing ($3 k_n \Sigma_n = \varepsilon(1 - (-1/2)^n)$), cutting `mean_abs_dev` in half from `p=1` (`0.328`) to `p=2` (`0.176`), and confirms that flux moments $F_2(n)$ cancel this ripple by **$> 23\times$** (`max_dev: 0.583 -> 0.024`). This empirically recovers from raw numbers the exact reason L'vov et al. (1998) introduced Sabra to eliminate GOY's period-3 oscillation.
