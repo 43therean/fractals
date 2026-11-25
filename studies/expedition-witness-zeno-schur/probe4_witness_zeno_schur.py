@@ -918,6 +918,8 @@ def run_part_b_exact_lindblad_zeno() -> Dict[str, Any]:
     sq_lo_r, sq_hi_r = isqrt_bracket(disc_ric, prec_bits=96)
     exact_slow_lo = (g_cm_ric + gamma_tid) - sq_hi_r
     exact_slow_hi = (g_cm_ric + gamma_tid) - sq_lo_r
+    last_abs_R_def = Fraction(0)
+    last_rate_err = Fraction(0)
     for step in range(7):
         if step == 0:
             # H_0 = -F^{-1} C = g / g_cm  (exact Schur complement!)
@@ -929,13 +931,15 @@ def run_part_b_exact_lindblad_zeno() -> Dict[str, Any]:
         rate_k = 2 * gamma_tid + 2 * g_val * H_iter
         if step == 0:
             check(rate_k == 2 * gamma_tid + 2 * g_val * g_val / g_cm_ric, "H_0 must equal exact Schur complement")
+        last_abs_R_def = abs(R_def)
+        last_rate_err = abs(rate_k - (exact_slow_lo + exact_slow_hi) / 2)
         riccati_chain.append({
             "iter": step,
-            "abs_riccati_defect_float": float(abs(R_def)),
-            "rate_minus_exact_slow_float": float(abs(rate_k - (exact_slow_lo + exact_slow_hi) / 2)),
+            "abs_riccati_defect_float": float(last_abs_R_def),
+            "rate_minus_exact_slow_float": float(last_rate_err),
         })
-    check(riccati_chain[-1]["abs_riccati_defect_float"] < 1e-12, "Riccati Fenichel iteration failed to converge")
-    check(riccati_chain[-1]["rate_minus_exact_slow_float"] < 1e-12, "Riccati slow rate failed to match exact -lambda_slow")
+    check(last_abs_R_def < Fraction(1, 10**12), "Riccati Fenichel iteration failed to converge")
+    check(last_rate_err < Fraction(1, 10**12), "Riccati slow rate failed to match exact -lambda_slow")
 
     # 5. Exact Rotating-Frame Soliton Clock Separation (H_rel = omega * I x Z)
     omega_val = Fraction(7, 5)
